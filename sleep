@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>낮잠시간 - 가장 자기 좋은 시간 계산기</title>
+    <!-- Chart.js 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 둥글둥글한 폰트 (Jua, Gowun Dodum) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #1a1d24;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+            --text-sub: #c3c8d4;
+            --accent-color: #a3c2f0;
+            --accent-light: rgba(163, 194, 240, 0.15);
+            --hover-bg: rgba(255, 255, 255, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Gowun Dodum', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(163, 194, 240, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(200, 220, 255, 0.05) 0%, transparent 40%);
+        }
+
+        h1, h2, h3, .heading-font {
+            font-family: 'Jua', sans-serif;
+            font-weight: normal;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 16px 0;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        header p {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+        }
+
+        /* 입력 영역 디자인 */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+            display: block;
+            color: var(--text-sub);
+        }
+
+        /* 과목 그리드 버튼 */
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+        }
+
+        .subject-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 12px 8px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .subject-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        .subject-btn.active {
+            background: var(--text-main);
+            color: var(--bg-color);
+            border-color: var(--text-main);
+            font-weight: bold;
+            transform: translateY(-2px);
+        }
+
+        /* 슬라이더 컨트롤 */
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .range-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--text-main);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .range-badge {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.1rem;
+            min-width: 80px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+
+        /* 계산 버튼 */
+        .calc-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 20px;
+            border: none;
+            background: var(--text-main);
+            color: var(--bg-color);
+            font-family: 'Jua', sans-serif;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .calc-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* 결과 화면 디자인 */
+        .results-wrapper {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .results-wrapper.active {
+            display: flex;
+        }
+
+        /* 추천 핵심 안내 카드 */
+        .recommend-box {
+            background: var(--accent-light);
+            border: 1px solid rgba(163, 194, 240, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .recommend-box h3 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+        }
+
+        .recommend-box p {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* 비교 표 디자인 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        th, td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            white-space: nowrap;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            font-family: 'Jua', sans-serif;
+            font-size: 1rem;
+            color: var(--text-sub);
+            font-weight: normal;
+        }
+
+        tr.recommended-row {
+            background: rgba(163, 194, 240, 0.12);
+            font-weight: bold;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .select-nap-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .select-nap-btn:hover {
+            background: white;
+            color: var(--bg-color);
+        }
+
+        /* 차트 컨테이너 */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            margin-top: 10px;
+        }
+
+        /* 스텔스 자세 팁 카드 */
+        .tip-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 4px solid var(--accent-color);
+            padding: 16px;
+            border-radius: 0 16px 16px 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 타이머 모달 */
+        .timer-display {
+            font-family: 'Jua', sans-serif;
+            font-size: 3rem;
+            text-align: center;
+            margin: 15px 0;
+            letter-spacing: 2px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            padding: 10px 20px;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: 'Jua', sans-serif;
+            cursor: pointer;
+        }
+
+        .timer-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px 8px;
+            }
+            .card {
+                padding: 18px;
+                border-radius: 20px;
+            }
+            .subject-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            th, td {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 헤더 -->
+        <header>
+            <h1>💤 낮잠시간</h1>
+            <p>과목별 조건에 맞는 가장 완벽한 낮잠 타이밍 계산기</p>
+        </header>
+
+        <!-- 입력 설정 카드 -->
+        <div class="card">
+            <div class="section-title">
+                <span>📚</span> 오늘의 과목 선택
+            </div>
+            
+            <div class="input-group">
+                <div class="subject-grid" id="subjectGrid">
+                    <!-- JS로 과목 버튼 자동 생성 -->
+                </div>
+            </div>
+
+            <div class="input-group">
+                <span class="input-label">😴 피로도 & 졸린 정도</span>
+                <div class="range-container">
+                    <input type="range" min="1" max="5" value="3" class="range-slider" id="sleepyRange">
+                    <span class="range-badge" id="sleepyBadge">보통 (3)</span>
+                </div>
+            </div>
+
+            <button class="calc-btn" onclick="calculateNapTime()">최적의 낮잠 시간 계산하기</button>
+        </div>
+
+        <!-- 결과 영역 -->
+        <div class="results-wrapper" id="resultsWrapper">
+            
+            <!-- 핵심 추천 카드 -->
+            <div class="card">
+                <div class="section-title">
+                    <span>💡</span> 맞춤 낮잠 진단 결과
+                </div>
+                <div class="recommend-box">
+                    <h3 id="recommendTitle">추천 코스 준비 중</h3>
+                    <p id="recommendDesc">선택하신 과목과 졸림 정도를 분석하여 최적의 수면 전략을 제안합니다.</p>
+                </div>
+            </div>
+
+            <!-- 한눈에 보는 옵션 비교 표 -->
+            <div class="card">
+                <div class="section-title">
+                    <span>📊</span> 낮잠 코스별 한눈에 비교
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>코스</th>
+                                <th>시간</th>
+                                <th>피로 회복도</th>
+                                <th>걸릴 위험</th>
+                                <th>선택</th>
+                            </tr>
+                        </thead>
+                        <tbody id="napTableBody">
+                            <!-- JS로 계산 결과 표 작성 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 그래프 시각화 -->
+            <div class="card">
+                <div class="section-title">
+                    <span>📈</span> 수면 깊이 & 위험도 그래프
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:10px;">
+                    수면 깊이가 깊어질수록 깨어났을 때 비몽사몽(수면 관성)이 심해질 수 있습니다.
+                </p>
+                <div class="chart-container">
+                    <canvas id="napChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 시그니처 포즈 및 팁 -->
+            <div class="card">
+                <div class="section-title">
+                    <span>🛡️</span> 맞춤 스텔스 포즈 & 꿀팁
+                </div>
+                <div class="tip-card" id="stealthTip">
+                    과목을 선택하면 해당 수업에 최적화된 잠들기 자세와 꿀팁이 표시됩니다.
+                </div>
+            </div>
+
+            <!-- 실시간 낮잠 타이머 -->
+            <div class="card" id="timerCard">
+                <div class="section-title">
+                    <span>⏱️</span> 타이머 설정
+                </div>
+                <div class="timer-display" id="timerDisplay">00:00</div>
+                <div class="timer-controls">
+                    <button class="timer-btn" onclick="startTimer()">시작</button>
+                    <button class="timer-btn" onclick="pauseTimer()">일시정지</button>
+                    <button class="timer-btn" onclick="resetTimer()">리셋</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 과목 데이터 구성 (체육, 미술, 과학, 가정이 빡셈)
+        const subjects = [
+            { name: '국어', strict: false, desc: '지문 읽는 척 고개 숙이고 침착하게 대기' },
+            { name: '수학', strict: false, desc: '문제 푸는 척 샤프를 쥐고 고개를 약간 숙임' },
+            { name: '영어', strict: false, desc: '단어장이나 본문 펼쳐두고 눈 가리기' },
+            { name: '과학', strict: true,  desc: '실험 도구 및 모니터 뒤로 완벽하게 은신' },
+            { name: '사회/역사', strict: false, desc: '교과서 세워두지 말고 자연스럽게 엎드리기' },
+            { name: '체육', strict: true,  desc: '체육관 관람석 또는 스탠드 구석 자리 확보 필수' },
+            { name: '미술', strict: true,  desc: '화구/이젤 뒤에 구도를 잡고 스케치하는 척' },
+            { name: '기술·가정', strict: true,  desc: '실습 재료 및 앞치마 뒤에 자연스럽게 숨기' },
+            { name: '음악/기타', strict: false, desc: '악보대 높이 조절 후 착석 수면' }
+        ];
+
+        // 낮잠 데이터 모델
+        const napOptions = [
+            { id: 'micro', name: '마이크로 냅', time: 10, recovery: '30%', risk: '매우 낮음', depth: 20 },
+            { id: 'power', name: '파워 냅', time: 20, recovery: '70%', risk: '보통', depth: 40 },
+            { id: 'deep',  name: '딥 냅', time: 35, recovery: '90%', risk: '높음', depth: 85 },
+            { id: 'full',  name: '풀 렘수면', time: 50, recovery: '100%', risk: '매우 높음', depth: 60 }
+        ];
+
+        let selectedSubject = subjects[0];
+        let chartInstance = null;
+        let timerInterval = null;
+        let timerSeconds = 0;
+
+        // UI 초기화
+        window.onload = () => {
+            renderSubjectButtons();
+            setupRangeSlider();
+        };
+
+        // 과목 버튼 생성
+        function renderSubjectButtons() {
+            const grid = document.getElementById('subjectGrid');
+            grid.innerHTML = '';
+            
+            subjects.forEach((subj, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `subject-btn ${idx === 0 ? 'active' : ''}`;
+                btn.innerText = subj.name;
+                btn.onclick = () => {
+                    document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedSubject = subj;
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        // 슬라이더 바인딩
+        function setupRangeSlider() {
+            const slider = document.getElementById('sleepyRange');
+            const badge = document.getElementById('sleepyBadge');
+            const labels = ['매우 양호 (1)', '약간 피곤 (2)', '보통 (3)', '졸림 (4)', '기절 직전 (5)'];
+
+            slider.oninput = (e) => {
+                badge.innerText = labels[e.target.value - 1];
+            };
+        }
+
+        // 낮잠 시간 계산 및 시각화
+        function calculateNapTime() {
+            const sleepyLevel = parseInt(document.getElementById('sleepyRange').value);
+            const resultsWrapper = document.getElementById('resultsWrapper');
+            resultsWrapper.classList.add('active');
+
+            // 빡센 과목 여부에 따른 추천 코스 선택
+            let recommendOption;
+            if (selectedSubject.strict) {
+                // 빡센 과목이면 피로도와 상관없이 짧고 안전한 코스 위주
+                recommendOption = sleepyLevel >= 4 ? napOptions[1] : napOptions[0];
+            } else {
+                // 괜찮은 과목이면 졸림 정도에 맞춰 넉넉하게 추천
+                if (sleepyLevel <= 2) recommendOption = napOptions[0];
+                else if (sleepyLevel === 3) recommendOption = napOptions[1];
+                else if (sleepyLevel === 4) recommendOption = napOptions[2];
+                else recommendOption = napOptions[3];
+            }
+
+            // 1. 추천 헤더 업데이트
+            document.getElementById('recommendTitle').innerText = 
+                `🎯 [${selectedSubject.name}] 수업 최적 코스: ${recommendOption.name} (${recommendOption.time}분)`;
+            
+            let statusDesc = selectedSubject.strict ? 
+                `주의가 필요한 수업입니다! 걸릴 위험을 최소화하는 ${recommendOption.time}분 코스를 강력 추천합니다.` :
+                `비교적 편안하게 수면을 취할 수 있는 과목입니다. ${recommendOption.time}분 동안 안심하고 꿀잠을 청하세요.`;
+            document.getElementById('recommendDesc').innerText = statusDesc;
+
+            // 2. 비교 표 업데이트
+            const tbody = document.getElementById('napTableBody');
+            tbody.innerHTML = '';
+
+            napOptions.forEach(opt => {
+                const tr = document.createElement('tr');
+                if (opt.id === recommendOption.id) {
+                    tr.className = 'recommended-row';
+                }
+
+                // 선생님 빡셈 수치 고려하여 걸릴 위험 재계산 표시
+                let adjustedRisk = opt.risk;
+                if (selectedSubject.strict) {
+                    if (opt.time >= 35) adjustedRisk = '매우 위험';
+                    else if (opt.time >= 20) adjustedRisk = '주의 필요';
+                }
+
+                tr.innerHTML = `
+                    <td>${opt.name} ${opt.id === recommendOption.id ? '⭐' : ''}</td>
+                    <td>${opt.time}분</td>
+                    <td>${opt.recovery}</td>
+                    <td>${adjustedRisk}</td>
+                    <td><button class="select-nap-btn" onclick="setTimer(${opt.time})">${opt.time}분 설정</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 3. 차트 그리기
+            renderChart(recommendOption);
+
+            // 4. 스텔스 팁 업데이트
+            document.getElementById('stealthTip').innerHTML = `
+                <strong>📍 ${selectedSubject.name} 수업 전용 수면 팁:</strong><br>
+                ${selectedSubject.desc}<br><br>
+                <strong>💡 피로도 팁:</strong> ${sleepyLevel >= 4 ? '수업 시작 직후 바로 눈을 붙여 깊은 수면 단계 진입을 최소화하세요.' : '가벼운 알람을 조용히 진동으로 맞춰두면 깨어날 때 훨씬 깔끔합니다.'}
+            `;
+
+            // 기본 타이머 설정
+            setTimer(recommendOption.time);
+
+            // 화면 스크롤 이동
+            resultsWrapper.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Chart.js 그래프 생성
+        function renderChart(recommended) {
+            const ctx = document.getElementById('napChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const times = [0, 10, 20, 30, 40, 50];
+            const sleepDepthData = [0, 20, 40, 85, 90, 60]; // 수면 깊이 데이터
+            
+            // 빡센 과목일수록 위험도 그래프 상승 폭이 큼
+            const riskData = selectedSubject.strict 
+                ? [10, 30, 60, 85, 95, 100] 
+                : [5, 15, 30, 45, 60, 70];
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: times.map(t => t + '분'),
+                    datasets: [
+                        {
+                            label: '수면 깊이 (깊을수록 안 깨어남)',
+                            data: sleepDepthData,
+                            borderColor: '#a3c2f0',
+                            backgroundColor: 'rgba(163, 194, 240, 0.15)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3
+                        },
+                        {
+                            label: '선생님 반응 및 걸릴 위험도',
+                            data: riskData,
+                            borderColor: 'rgba(255, 255, 255, 0.4)',
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.2,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#c3c8d4',
+                                font: { family: 'Gowun Dodum' }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#c3c8d4' }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#c3c8d4' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 타이머 관련 로직
+        function setTimer(minutes) {
+            pauseTimer();
+            timerSeconds = minutes * 60;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const s = (timerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            if (timerSeconds <= 0) return;
+
+            timerInterval = setInterval(() => {
+                if (timerSeconds > 0) {
+                    timerSeconds--;
+                    updateTimerDisplay();
+                } else {
+                    pauseTimer();
+                    alert('⏰ 낮잠 시간이 종료되었습니다! 눈을 뜨고 자연스럽게 자세를 고쳐잡으세요.');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = 0;
+            updateTimerDisplay();
+        }
+    </script>
+</body>
+</html>
