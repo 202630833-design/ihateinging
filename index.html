@@ -1,292 +1,706 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>랜덤 핑계 생성기 | 오늘만 넘어가자!</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>낮잠시간 - 가장 자기 좋은 시간 계산기</title>
+    <!-- Chart.js 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 둥글둥글한 폰트 (Jua, Gowun Dodum) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #1a1d24;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+            --text-sub: #c3c8d4;
+            --accent-color: #a3c2f0;
+            --accent-light: rgba(163, 194, 240, 0.15);
+            --hover-bg: rgba(255, 255, 255, 0.12);
+        }
 
-    body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      color: #333;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Gowun Dodum', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .card {
-      background: #ffffff;
-      width: 100%;
-      max-width: 520px;
-      padding: 35px 25px;
-      border-radius: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(163, 194, 240, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(200, 220, 255, 0.05) 0%, transparent 40%);
+        }
 
-    .badge {
-      display: inline-block;
-      background: #f1f3f5;
-      color: #5c7cfa;
-      font-weight: 700;
-      font-size: 13px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      margin-bottom: 12px;
-    }
+        h1, h2, h3, .heading-font {
+            font-family: 'Jua', sans-serif;
+            font-weight: normal;
+        }
 
-    h1 {
-      font-size: 26px;
-      font-weight: 800;
-      color: #2b2c34;
-      margin-bottom: 8px;
-    }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-    p.subtitle {
-      font-size: 14px;
-      color: #626471;
-      margin-bottom: 25px;
-    }
+        header {
+            text-align: center;
+            padding: 16px 0;
+        }
 
-    /* Tab controls for category */
-    .category-tabs {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 25px;
-      flex-wrap: wrap;
-    }
+        header h1 {
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
 
-    .tab-btn {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      padding: 8px 16px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #495057;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+        header p {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+        }
 
-    .tab-btn.active {
-      background: #5c7cfa;
-      color: #ffffff;
-      border-color: #5c7cfa;
-      box-shadow: 0 4px 10px rgba(92, 124, 250, 0.3);
-    }
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
 
-    /* Output Display Area */
-    .display-box {
-      background: #f8f9fa;
-      border: 2px dashed #bac8ff;
-      border-radius: 18px;
-      padding: 30px 20px;
-      min-height: 150px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 25px;
-      position: relative;
-    }
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+        }
 
-    .excuse-text {
-      font-size: 18px;
-      font-weight: 700;
-      color: #343a40;
-      line-height: 1.5;
-      word-break: keep-all;
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+        /* 입력 영역 디자인 */
+        .input-group {
+            margin-bottom: 20px;
+        }
 
-    .excuse-tag {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #868e96;
-      font-weight: 500;
-    }
+        .input-label {
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+            display: block;
+            color: var(--text-sub);
+        }
 
-    /* Buttons Group */
-    .btn-group {
-      display: flex;
-      gap: 10px;
-    }
+        /* 과목 그리드 버튼 */
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+        }
 
-    .action-btn {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 14px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.2s ease;
-    }
+        .subject-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 12px 8px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
 
-    .generate-btn {
-      background: #5c7cfa;
-      color: #ffffff;
-      box-shadow: 0 6px 15px rgba(92, 124, 250, 0.4);
-    }
+        .subject-btn:hover {
+            background: var(--hover-bg);
+        }
 
-    .generate-btn:hover {
-      background: #4c6ef5;
-    }
+        .subject-btn.active {
+            background: var(--text-main);
+            color: var(--bg-color);
+            border-color: var(--text-main);
+            font-weight: bold;
+            transform: translateY(-2px);
+        }
 
-    .generate-btn:active {
-      transform: scale(0.98);
-    }
+        /* 슬라이더 컨트롤 */
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
 
-    .copy-btn {
-      background: #e9ecef;
-      color: #495057;
-      width: 100px;
-      flex: none;
-    }
+        .range-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
 
-    .copy-btn:hover {
-      background: #dee2e6;
-    }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--text-main);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
 
-    /* Toast Notification */
-    .toast {
-      position: absolute;
-      bottom: -50px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(33, 37, 41, 0.9);
-      color: #ffffff;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 500;
-      opacity: 0;
-      transition: all 0.3s ease;
-      pointer-events: none;
-    }
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
 
-    .toast.show {
-      bottom: 20px;
-      opacity: 1;
-    }
-  </style>
+        .range-badge {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.1rem;
+            min-width: 80px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+
+        /* 계산 버튼 */
+        .calc-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 20px;
+            border: none;
+            background: var(--text-main);
+            color: var(--bg-color);
+            font-family: 'Jua', sans-serif;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .calc-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* 결과 화면 디자인 */
+        .results-wrapper {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .results-wrapper.active {
+            display: flex;
+        }
+
+        /* 추천 핵심 안내 카드 */
+        .recommend-box {
+            background: var(--accent-light);
+            border: 1px solid rgba(163, 194, 240, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .recommend-box h3 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+        }
+
+        .recommend-box p {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* 비교 표 디자인 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        th, td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            white-space: nowrap;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            font-family: 'Jua', sans-serif;
+            font-size: 1rem;
+            color: var(--text-sub);
+            font-weight: normal;
+        }
+
+        tr.recommended-row {
+            background: rgba(163, 194, 240, 0.12);
+            font-weight: bold;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .select-nap-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .select-nap-btn:hover {
+            background: white;
+            color: var(--bg-color);
+        }
+
+        /* 차트 컨테이너 */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            margin-top: 10px;
+        }
+
+        /* 스텔스 자세 팁 카드 */
+        .tip-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 4px solid var(--accent-color);
+            padding: 16px;
+            border-radius: 0 16px 16px 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 타이머 모달 */
+        .timer-display {
+            font-family: 'Jua', sans-serif;
+            font-size: 3rem;
+            text-align: center;
+            margin: 15px 0;
+            letter-spacing: 2px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            padding: 10px 20px;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: 'Jua', sans-serif;
+            cursor: pointer;
+        }
+
+        .timer-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px 8px;
+            }
+            .card {
+                padding: 18px;
+                border-radius: 20px;
+            }
+            .subject-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            th, td {
+                padding: 10px 12px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-  <div class="card">
-    <span class="badge">🔥 위기 탈출 메이커</span>
-    <h1>랜덤 핑계 생성기</h1>
-    <p class="subtitle">상황을 선택하고 버튼을 누르면 위기 탈출 핑계가 완성됩니다.</p>
+    <div class="container">
+        <!-- 헤더 -->
+        <header>
+            <h1>💤 낮잠시간</h1>
+            <p>과목별 조건에 맞는 가장 완벽한 낮잠 타이밍 계산기</p>
+        </header>
 
-    <!-- Category Tabs -->
-    <div class="category-tabs">
-      <button class="tab-btn active" onclick="setCategory('all')">🎲 전체</button>
-      <button class="tab-btn" onclick="setCategory('tardy')">⏰ 지각</button>
-      <button class="tab-btn" onclick="setCategory('absent')">🙅‍♂️ 불참/약속취소</button>
-      <button class="tab-btn" onclick="setCategory('task')">📝 과제/업무미제출</button>
-      <button class="tab-btn" onclick="setCategory('crazy')">👽 엉뚱/황당</button>
+        <!-- 입력 설정 카드 -->
+        <div class="card">
+            <div class="section-title">
+                <span>📚</span> 오늘의 과목 선택
+            </div>
+            
+            <div class="input-group">
+                <div class="subject-grid" id="subjectGrid">
+                    <!-- JS로 과목 버튼 자동 생성 -->
+                </div>
+            </div>
+
+            <div class="input-group">
+                <span class="input-label">😴 피로도 & 졸린 정도</span>
+                <div class="range-container">
+                    <input type="range" min="1" max="5" value="3" class="range-slider" id="sleepyRange">
+                    <span class="range-badge" id="sleepyBadge">보통 (3)</span>
+                </div>
+            </div>
+
+            <button class="calc-btn" onclick="calculateNapTime()">최적의 낮잠 시간 계산하기</button>
+        </div>
+
+        <!-- 결과 영역 -->
+        <div class="results-wrapper" id="resultsWrapper">
+            
+            <!-- 핵심 추천 카드 -->
+            <div class="card">
+                <div class="section-title">
+                    <span>💡</span> 맞춤 낮잠 진단 결과
+                </div>
+                <div class="recommend-box">
+                    <h3 id="recommendTitle">추천 코스 준비 중</h3>
+                    <p id="recommendDesc">선택하신 과목과 졸림 정도를 분석하여 최적의 수면 전략을 제안합니다.</p>
+                </div>
+            </div>
+
+            <!-- 한눈에 보는 옵션 비교 표 -->
+            <div class="card">
+                <div class="section-title">
+                    <span>📊</span> 낮잠 코스별 한눈에 비교
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>코스</th>
+                                <th>시간</th>
+                                <th>피로 회복도</th>
+                                <th>걸릴 위험</th>
+                                <th>선택</th>
+                            </tr>
+                        </thead>
+                        <tbody id="napTableBody">
+                            <!-- JS로 계산 결과 표 작성 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 그래프 시각화 -->
+            <div class="card">
+                <div class="section-title">
+                    <span>📈</span> 수면 깊이 & 위험도 그래프
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:10px;">
+                    수면 깊이가 깊어질수록 깨어났을 때 비몽사몽(수면 관성)이 심해질 수 있습니다.
+                </p>
+                <div class="chart-container">
+                    <canvas id="napChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 시그니처 포즈 및 팁 -->
+            <div class="card">
+                <div class="section-title">
+                    <span>🛡️</span> 맞춤 스텔스 포즈 & 꿀팁
+                </div>
+                <div class="tip-card" id="stealthTip">
+                    과목을 선택하면 해당 수업에 최적화된 잠들기 자세와 꿀팁이 표시됩니다.
+                </div>
+            </div>
+
+            <!-- 실시간 낮잠 타이머 -->
+            <div class="card" id="timerCard">
+                <div class="section-title">
+                    <span>⏱️</span> 타이머 설정
+                </div>
+                <div class="timer-display" id="timerDisplay">00:00</div>
+                <div class="timer-controls">
+                    <button class="timer-btn" onclick="startTimer()">시작</button>
+                    <button class="timer-btn" onclick="pauseTimer()">일시정지</button>
+                    <button class="timer-btn" onclick="resetTimer()">리셋</button>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <!-- Excuse Display -->
-    <div class="display-box">
-      <div class="excuse-text" id="excuseDisplay">아래 '핑계 뽑기' 버튼을 눌러보세요!</div>
-      <div class="excuse-tag" id="excuseTag">#준비완료</div>
-    </div>
+    <script>
+        // 과목 데이터 구성 (체육, 미술, 과학, 가정이 빡셈)
+        const subjects = [
+            { name: '국어', strict: false, desc: '지문 읽는 척 고개 숙이고 침착하게 대기' },
+            { name: '수학', strict: false, desc: '문제 푸는 척 샤프를 쥐고 고개를 약간 숙임' },
+            { name: '영어', strict: false, desc: '단어장이나 본문 펼쳐두고 눈 가리기' },
+            { name: '과학', strict: true,  desc: '실험 도구 및 모니터 뒤로 완벽하게 은신' },
+            { name: '사회/역사', strict: false, desc: '교과서 세워두지 말고 자연스럽게 엎드리기' },
+            { name: '체육', strict: true,  desc: '체육관 관람석 또는 스탠드 구석 자리 확보 필수' },
+            { name: '미술', strict: true,  desc: '화구/이젤 뒤에 구도를 잡고 스케치하는 척' },
+            { name: '기술·가정', strict: true,  desc: '실습 재료 및 앞치마 뒤에 자연스럽게 숨기' },
+            { name: '음악/기타', strict: false, desc: '악보대 높이 조절 후 착석 수면' }
+        ];
 
-    <!-- Controls -->
-    <div class="btn-group">
-      <button class="action-btn generate-btn" onclick="generateExcuse()">🎲 핑계 뽑기!</button>
-      <button class="action-btn copy-btn" onclick="copyExcuse()">📋 복사</button>
-    </div>
+        // 낮잠 데이터 모델
+        const napOptions = [
+            { id: 'micro', name: '마이크로 냅', time: 10, recovery: '30%', risk: '매우 낮음', depth: 20 },
+            { id: 'power', name: '파워 냅', time: 20, recovery: '70%', risk: '보통', depth: 40 },
+            { id: 'deep',  name: '딥 냅', time: 35, recovery: '90%', risk: '높음', depth: 85 },
+            { id: 'full',  name: '풀 렘수면', time: 50, recovery: '100%', risk: '매우 높음', depth: 60 }
+        ];
 
-    <!-- Toast Notice -->
-    <div class="toast" id="toast">핑계가 클립보드에 복사되었습니다!</div>
-  </div>
+        let selectedSubject = subjects[0];
+        let chartInstance = null;
+        let timerInterval = null;
+        let timerSeconds = 0;
 
-  <script>
-    const excuses = [
-      // 지각 (tardy)
-      { text: "엘리베이터가 고장 나서 20층부터 계단으로 걸어 내려왔습니다.", category: "tardy", tag: "#지각 #체력강화" },
-      { text: "집 나오자마자 고양이가 길을 막고 안 비켜줘서 설득하느라 늦었습니다.", category: "tardy", tag: "#지각 #귀여움주의" },
-      { text: "버스 기사님이 오늘따라 안전운전을 너무 철저하게 하셔서 정시 도착이 불가능했습니다.", category: "tardy", tag: "#지각 #안전제일" },
-      { text: "신발 끈을 묶는데 무한 루프에 빠져서 풀어내느라 시간이 걸렸습니다.", category: "tardy", tag: "#지각 #패션의완성" },
-      { text: "알람 소리가 너무 좋아서 꿈속에서 리듬 타고 감상하느라 늦었습니다.", category: "tardy", tag: "#지각 #음악감상" },
+        // UI 초기화
+        window.onload = () => {
+            renderSubjectButtons();
+            setupRangeSlider();
+        };
 
-      // 불참/약속취소 (absent)
-      { text: "갑자기 집에 급한 일이 생겨서 오늘 약속은 어려울 것 같습니다. 죄송합니다!", category: "absent", tag: "#약속취소 #정석" },
-      { text: "갑자기 식중독 증세가 살짝 있어서 오늘은 집에서 쉬어야 할 것 같아요.", category: "absent", tag: "#약속취소 #환자모드" },
-      { text: "집에 보일러가 터져서 지금 물을 퍼내야 하는 긴급 상황입니다.", category: "absent", tag: "#약속취소 #재난상황" },
-      { text: "오늘따라 기운이 너무 빠져서 나가면 민폐만 될 것 같아요. 다음에 맛있는 거 살게요!", category: "absent", tag: "#약속취소 #에너지고갈" },
+        // 과목 버튼 생성
+        function renderSubjectButtons() {
+            const grid = document.getElementById('subjectGrid');
+            grid.innerHTML = '';
+            
+            subjects.forEach((subj, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `subject-btn ${idx === 0 ? 'active' : ''}`;
+                btn.innerText = subj.name;
+                btn.onclick = () => {
+                    document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedSubject = subj;
+                };
+                grid.appendChild(btn);
+            });
+        }
 
-      // 과제/업무미제출 (task)
-      { text: "파일을 열심히 만들었는데 저장을 안 하고 컴퓨터가 재부팅되어 버렸습니다...", category: "task", tag: "#업무 #블루스크린" },
-      { text: "최종본 파일명이 '진짜최종_final_v2.docx'였는데 실수로 삭제해 버렸습니다.", category: "task", tag: "#과제 #휴지통복구중" },
-      { text: "자료 조사를 너무 깊게 하다 보니 논문의 바다에 빠져서 아직 정리 중입니다.", category: "task", tag: "#과제 #학구열폭발" },
-      { text: "어제 작성한 데이터가 인공지능에 의해 보안 조치되어 승인 대기 중입니다.", category: "task", tag: "#업무 #하이테크" },
+        // 슬라이더 바인딩
+        function setupRangeSlider() {
+            const slider = document.getElementById('sleepyRange');
+            const badge = document.getElementById('sleepyBadge');
+            const labels = ['매우 양호 (1)', '약간 피곤 (2)', '보통 (3)', '졸림 (4)', '기절 직전 (5)'];
 
-      // 엉뚱/황당 (crazy)
-      { text: "지구 평화를 위해 비밀 임무를 수행하느라 연락이 늦어졌습니다.", category: "crazy", tag: "#황당 #히어로" },
-      { text: "오늘 운세에서 집 밖으로 나가면 대흉이라고 해서 침대에서 자숙 중입니다.", category: "crazy", tag: "#황당 #토속신앙" },
-      { text: "평행세계의 내가 오늘 일을 다 끝냈다고 해서 쉬고 있었습니다.", category: "crazy", tag: "#황당 #SF영화" },
-      { text: "외계인이 신호를 보내와서 그거 해석하느라 잠시 정신을 잃었습니다.", category: "crazy", tag: "#황당 #UFO" }
-    ];
+            slider.oninput = (e) => {
+                badge.innerText = labels[e.target.value - 1];
+            };
+        }
 
-    let currentCategory = 'all';
+        // 낮잠 시간 계산 및 시각화
+        function calculateNapTime() {
+            const sleepyLevel = parseInt(document.getElementById('sleepyRange').value);
+            const resultsWrapper = document.getElementById('resultsWrapper');
+            resultsWrapper.classList.add('active');
 
-    function setCategory(cat) {
-      currentCategory = cat;
-      const buttons = document.querySelectorAll('.tab-btn');
-      buttons.forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-    }
+            // 빡센 과목 여부에 따른 추천 코스 선택
+            let recommendOption;
+            if (selectedSubject.strict) {
+                // 빡센 과목이면 피로도와 상관없이 짧고 안전한 코스 위주
+                recommendOption = sleepyLevel >= 4 ? napOptions[1] : napOptions[0];
+            } else {
+                // 괜찮은 과목이면 졸림 정도에 맞춰 넉넉하게 추천
+                if (sleepyLevel <= 2) recommendOption = napOptions[0];
+                else if (sleepyLevel === 3) recommendOption = napOptions[1];
+                else if (sleepyLevel === 4) recommendOption = napOptions[2];
+                else recommendOption = napOptions[3];
+            }
 
-    function generateExcuse() {
-      let filtered = excuses;
-      if (currentCategory !== 'all') {
-        filtered = excuses.filter(e => e.category === currentCategory);
-      }
+            // 1. 추천 헤더 업데이트
+            document.getElementById('recommendTitle').innerText = 
+                `🎯 [${selectedSubject.name}] 수업 최적 코스: ${recommendOption.name} (${recommendOption.time}분)`;
+            
+            let statusDesc = selectedSubject.strict ? 
+                `주의가 필요한 수업입니다! 걸릴 위험을 최소화하는 ${recommendOption.time}분 코스를 강력 추천합니다.` :
+                `비교적 편안하게 수면을 취할 수 있는 과목입니다. ${recommendOption.time}분 동안 안심하고 꿀잠을 청하세요.`;
+            document.getElementById('recommendDesc').innerText = statusDesc;
 
-      const randomIndex = Math.floor(Math.random() * filtered.length);
-      const selected = filtered[randomIndex];
+            // 2. 비교 표 업데이트
+            const tbody = document.getElementById('napTableBody');
+            tbody.innerHTML = '';
 
-      const display = document.getElementById('excuseDisplay');
-      const tag = document.getElementById('excuseTag');
+            napOptions.forEach(opt => {
+                const tr = document.createElement('tr');
+                if (opt.id === recommendOption.id) {
+                    tr.className = 'recommended-row';
+                }
 
-      display.style.transform = 'scale(0.95)';
-      setTimeout(() => {
-        display.innerText = `"${selected.text}"`;
-        tag.innerText = selected.tag;
-        display.style.transform = 'scale(1)';
-      }, 100);
-    }
+                // 선생님 빡셈 수치 고려하여 걸릴 위험 재계산 표시
+                let adjustedRisk = opt.risk;
+                if (selectedSubject.strict) {
+                    if (opt.time >= 35) adjustedRisk = '매우 위험';
+                    else if (opt.time >= 20) adjustedRisk = '주의 필요';
+                }
 
-    function copyExcuse() {
-      const text = document.getElementById('excuseDisplay').innerText;
-      if (text.includes("버튼을 눌러보세요")) return;
+                tr.innerHTML = `
+                    <td>${opt.name} ${opt.id === recommendOption.id ? '⭐' : ''}</td>
+                    <td>${opt.time}분</td>
+                    <td>${opt.recovery}</td>
+                    <td>${adjustedRisk}</td>
+                    <td><button class="select-nap-btn" onclick="setTimer(${opt.time})">${opt.time}분 설정</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
 
-      navigator.clipboard.writeText(text).then(() => {
-        showToast();
-      });
-    }
+            // 3. 차트 그리기
+            renderChart(recommendOption);
 
-    function showToast() {
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2000);
-    }
-  </script>
+            // 4. 스텔스 팁 업데이트
+            document.getElementById('stealthTip').innerHTML = `
+                <strong>📍 ${selectedSubject.name} 수업 전용 수면 팁:</strong><br>
+                ${selectedSubject.desc}<br><br>
+                <strong>💡 피로도 팁:</strong> ${sleepyLevel >= 4 ? '수업 시작 직후 바로 눈을 붙여 깊은 수면 단계 진입을 최소화하세요.' : '가벼운 알람을 조용히 진동으로 맞춰두면 깨어날 때 훨씬 깔끔합니다.'}
+            `;
+
+            // 기본 타이머 설정
+            setTimer(recommendOption.time);
+
+            // 화면 스크롤 이동
+            resultsWrapper.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Chart.js 그래프 생성
+        function renderChart(recommended) {
+            const ctx = document.getElementById('napChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const times = [0, 10, 20, 30, 40, 50];
+            const sleepDepthData = [0, 20, 40, 85, 90, 60]; // 수면 깊이 데이터
+            
+            // 빡센 과목일수록 위험도 그래프 상승 폭이 큼
+            const riskData = selectedSubject.strict 
+                ? [10, 30, 60, 85, 95, 100] 
+                : [5, 15, 30, 45, 60, 70];
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: times.map(t => t + '분'),
+                    datasets: [
+                        {
+                            label: '수면 깊이 (깊을수록 안 깨어남)',
+                            data: sleepDepthData,
+                            borderColor: '#a3c2f0',
+                            backgroundColor: 'rgba(163, 194, 240, 0.15)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3
+                        },
+                        {
+                            label: '선생님 반응 및 걸릴 위험도',
+                            data: riskData,
+                            borderColor: 'rgba(255, 255, 255, 0.4)',
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.2,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#c3c8d4',
+                                font: { family: 'Gowun Dodum' }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#c3c8d4' }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#c3c8d4' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 타이머 관련 로직
+        function setTimer(minutes) {
+            pauseTimer();
+            timerSeconds = minutes * 60;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const s = (timerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            if (timerSeconds <= 0) return;
+
+            timerInterval = setInterval(() => {
+                if (timerSeconds > 0) {
+                    timerSeconds--;
+                    updateTimerDisplay();
+                } else {
+                    pauseTimer();
+                    alert('⏰ 낮잠 시간이 종료되었습니다! 눈을 뜨고 자연스럽게 자세를 고쳐잡으세요.');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = 0;
+            updateTimerDisplay();
+        }
+    </script>
 </body>
-</html>k
+</html>
